@@ -1221,6 +1221,17 @@ If the prefix is long enough, enforce auto completion."
     (funcall capf)))
 
 ;;;###autoload
+(defun cape-wrap-outside-faces (capf &rest faces)
+  "Call CAPF only if outside FACES."
+  (when-let* (((> (point) (point-min)))
+              (fs (get-text-property (1- (point)) 'face))
+              ( (not ; invert `cape-wrap-inside-faces' original logic
+                 (if (listp fs)
+                     (cl-loop for f in fs thereis (memq f faces))
+                   (memq fs faces)))))
+    (funcall capf)))
+
+;;;###autoload
 (defun cape-wrap-inside-code (capf)
   "Call CAPF only if inside code, not inside a comment or string.
 This function can be used as an advice around an existing Capf."
@@ -1291,13 +1302,13 @@ This function can be used as an advice around an existing Capf."
 
 (dolist (wrapper (list #'cape-wrap-accept-all #'cape-wrap-buster
                        #'cape-wrap-case-fold #'cape-wrap-choose
-                       #'cape-wrap-debug #'cape-wrap-inside-code
-                       #'cape-wrap-inside-comment #'cape-wrap-inside-faces
-                       #'cape-wrap-inside-string #'cape-wrap-nonexclusive
-                       #'cape-wrap-noninterruptible #'cape-wrap-passthrough
-                       #'cape-wrap-predicate #'cape-wrap-prefix-length
-                       #'cape-wrap-properties 'cape-wrap-purify
-                       #'cape-wrap-silent #'cape-wrap-sort
+                       #'cape-wrap-debug #'cape-wrap-inside-string
+                       #'cape-wrap-inside-code #'cape-wrap-inside-comment
+                       #'cape-wrap-inside-faces #'cape-wrap-outside-faces
+                       #'cape-wrap-nonexclusive #'cape-wrap-noninterruptible
+                       #'cape-wrap-passthrough #'cape-wrap-predicate
+                       #'cape-wrap-prefix-length #'cape-wrap-properties
+                       'cape-wrap-purify #'cape-wrap-silent #'cape-wrap-sort
                        #'cape-wrap-super #'cape-wrap-trigger))
   (let ((name (string-remove-prefix "cape-wrap-" (symbol-name wrapper))))
     (defalias (intern (format "cape-capf-%s" name))
